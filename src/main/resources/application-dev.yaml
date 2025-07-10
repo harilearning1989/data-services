@@ -67,3 +67,20 @@ logging:
   level:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+fake:
+  rest:
+    jsonPlaceHolder: https://jsonplaceholder.typicode.com
+    products: https://fakestoreapi.com
+    carts: https://dummyjson.com
+    fakeRestApi: https://fakerestapi.azurewebsites.net
+
+
+  #"https://fakestoreapi.com/products",
+  #"https://dummyjson.com/carts",
+  #"https://fakerestapi.azurewebsites.net/api/v1/Books",
+  #"https://fakerestapi.azurewebsites.net/api/v1/Authors",
+  #"https://jsonplaceholder.typicode.com/posts",
+  #"https://jsonplaceholder.typicode.com/comments",
+  #"https://jsonplaceholder.typicode.com/todos",
+  #"https://jsonplaceholder.typicode.com/photos"
