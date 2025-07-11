@@ -71,6 +71,7 @@ logging:
 fake:
   rest:
     jsonPlaceHolder: https://jsonplaceholder.typicode.com
+    users: https://dummyjson.com
     products: https://fakestoreapi.com
     carts: https://dummyjson.com
     fakeRestApi: https://fakerestapi.azurewebsites.net

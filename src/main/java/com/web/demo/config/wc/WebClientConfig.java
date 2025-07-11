@@ -18,20 +18,22 @@ public class WebClientConfig {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebClientConfig.class);
 
-    @Value("${login.rest.jsonPlaceHolder}")
-    private String jsonPlaceHolder;
-
     @Autowired
     private CommonWebClient commonWebClient;
 
-   /* @Bean
+    @Value("${fake.rest.jsonPlaceHolder}")
+    private String jsonPlaceHolder;
+    @Value("${fake.rest.users}")
+    private String usersUrl;
+
+    @Bean
     public JsonPlaceHolderClient jsonPlaceHolderClient() {
         Map<String, String> headers = Map.of(
                 "Authorization", "Bearer your-token",
                 "Custom-Header", "CustomValue"
         );
         return commonWebClient
-                .httpServiceProxyFactory(jsonPlaceHolder, headers, JsonPlaceHolderClient.class);
+                .createClient(jsonPlaceHolder, headers, JsonPlaceHolderClient.class);
     }
 
     @Bean
@@ -41,7 +43,7 @@ public class WebClientConfig {
                 "Custom-Header", "CustomValue"
         );
         return commonWebClient
-                .httpServiceProxyFactory(jsonPlaceHolder, headers, UsersRestClient.class);
+                .createClient(usersUrl, headers, UsersRestClient.class);
     }
 
     @Bean
@@ -51,7 +53,7 @@ public class WebClientConfig {
                 "Custom-Header", "CustomValue"
         );
         return commonWebClient
-                .httpServiceProxyFactory(jsonPlaceHolder, headers, CommentsRestClient.class);
+                .createClient(usersUrl, headers, CommentsRestClient.class);
     }
 
     @Bean
@@ -61,6 +63,6 @@ public class WebClientConfig {
                 "Custom-Header", "CustomValue"
         );
         return commonWebClient
-                .httpServiceProxyFactory(jsonPlaceHolder, headers, TodosRestClient.class);
-    }*/
+                .createClient(usersUrl, headers, TodosRestClient.class);
+    }
 }
