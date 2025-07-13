@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.swing.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -38,6 +37,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Async("restExecutor")
     @Override
     public CompletableFuture<List<Product>> getProductsAsync() {
+        LOGGER.info("getProductsAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = products + "/products";
         LOGGER.info("getProductsAsync URL::{}", url);
 
@@ -57,6 +57,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Async("restExecutor")
     @Override
     public CompletableFuture<List<Photos>> getPhotosAsync() {
+        LOGGER.info("getPhotosAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = jsonPlaceHolder + "/photos";
         LOGGER.info("getPhotosAsync URL::{}", url);
         List<Photos> photosList = restTemplate.exchange(
@@ -73,14 +74,17 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Async("restExecutor")
     @Override
     public CompletableFuture<CartResponse> getCartsAsync() {
+        LOGGER.info("getCartsAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = carts + "/carts";
         LOGGER.info("getCartsAsync URL::{}", url);
         CartResponse cartResponse = restTemplate.getForObject(url, CartResponse.class);
         return CompletableFuture.completedFuture(cartResponse);
     }
 
+    @Async("restExecutor")
     @Override
     public CompletableFuture<List<Posts>> streamAllPostsAsync() {
+        LOGGER.info("streamAllPostsAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = jsonPlaceHolder + "/posts";
         LOGGER.info("streamAllPostsAsync URL::{}", url);
         /*try {
@@ -99,8 +103,10 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
         return CompletableFuture.completedFuture(postsList);
     }
 
+    @Async("restExecutor")
     @Override
     public CompletableFuture<List<Book>> getBooksAsync() {
+        LOGGER.info("getBooksAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = fakeRestApi + "/api/v1/Books";
         LOGGER.info("getBooksAsync URL::{}", url);
         List<Book> bookList=  restTemplate.exchange(
@@ -113,8 +119,10 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
         return CompletableFuture.completedFuture(bookList);
     }
 
+    @Async("restExecutor")
     @Override
     public CompletableFuture<List<Authors>> getAuthorsAsync() {
+        LOGGER.info("getAuthorsAsync Running in thread: {}" , Thread.currentThread().getName());
         /*try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {
@@ -135,8 +143,10 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
         return CompletableFuture.completedFuture(limitedList);
     }
 
+    @Async("restExecutor")
     @Override
     public CompletableFuture<List<Comments>> getCommentsAsync() {
+        LOGGER.info("getCommentsAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = jsonPlaceHolder + "/comments";
         LOGGER.info("getCommentsAsync URL::{}", url);
         List<Comments> commentsList = restTemplate.exchange(
@@ -150,8 +160,10 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
         return CompletableFuture.completedFuture(limitedList);
     }
 
+    @Async("restExecutor")
     @Override
     public CompletableFuture<List<Todos>> getTodosAsync() {
+        LOGGER.info("getTodosAsync Running in thread: {}" , Thread.currentThread().getName());
         String url = jsonPlaceHolder + "/todos";
         LOGGER.info("getTodosAsync URL::{}", url);
         List<Todos> todosList = restTemplate.exchange(
