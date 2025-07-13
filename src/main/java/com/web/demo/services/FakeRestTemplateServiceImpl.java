@@ -2,16 +2,23 @@ package com.web.demo.services;
 
 import com.web.demo.records.*;
 import com.web.demo.utils.CommonUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.swing.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
+
+    private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private final RestTemplate restTemplate;
 
@@ -28,9 +35,140 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
         this.restTemplate = restTemplate;
     }
 
+    @Async("restExecutor")
+    @Override
+    public CompletableFuture<List<Product>> getProductsAsync() {
+        String url = products + "/products";
+        LOGGER.info("getProductsAsync URL::{}", url);
+
+        List<Product> productList = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Product>>() {
+                }
+        ).getBody();
+
+        List<Product> limitedList = CommonUtils.getLimitedList(productList, 10);
+
+        return CompletableFuture.completedFuture(limitedList);
+    }
+
+    @Async("restExecutor")
+    @Override
+    public CompletableFuture<List<Photos>> getPhotosAsync() {
+        String url = jsonPlaceHolder + "/photos";
+        LOGGER.info("getPhotosAsync URL::{}", url);
+        List<Photos> photosList = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Photos>>() {
+                }
+        ).getBody();
+        List<Photos> limitedList = CommonUtils.getLimitedList(photosList,10);
+        return CompletableFuture.completedFuture(limitedList);
+    }
+
+    @Async("restExecutor")
+    @Override
+    public CompletableFuture<CartResponse> getCartsAsync() {
+        String url = carts + "/carts";
+        LOGGER.info("getCartsAsync URL::{}", url);
+        CartResponse cartResponse = restTemplate.getForObject(url, CartResponse.class);
+        return CompletableFuture.completedFuture(cartResponse);
+    }
+
+    @Override
+    public CompletableFuture<List<Posts>> streamAllPostsAsync() {
+        String url = jsonPlaceHolder + "/posts";
+        LOGGER.info("streamAllPostsAsync URL::{}", url);
+        /*try {
+            TimeUnit.MINUTES.sleep(2); // Sleeps for 2 seconds
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }*/
+        List<Posts> postsList = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Posts>>() {
+                }
+        ).getBody();
+        //return CommonUtils.getLimitedList(postsList,10);
+        return CompletableFuture.completedFuture(postsList);
+    }
+
+    @Override
+    public CompletableFuture<List<Book>> getBooksAsync() {
+        String url = fakeRestApi + "/api/v1/Books";
+        LOGGER.info("getBooksAsync URL::{}", url);
+        List<Book> bookList=  restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Book>>() {
+                }
+        ).getBody();
+        return CompletableFuture.completedFuture(bookList);
+    }
+
+    @Override
+    public CompletableFuture<List<Authors>> getAuthorsAsync() {
+        /*try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.out.println("Thread was interrupted!");
+        }*/
+        String url = fakeRestApi + "/api/v1/Authors";
+        LOGGER.info("getAuthorsAsync URL::{}", url);
+        List<Authors> authorsList = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Authors>>() {
+                }
+        ).getBody();
+        //System.out.println(10/0);
+        List<Authors> limitedList= CommonUtils.getLimitedList(authorsList,10);
+        return CompletableFuture.completedFuture(limitedList);
+    }
+
+    @Override
+    public CompletableFuture<List<Comments>> getCommentsAsync() {
+        String url = jsonPlaceHolder + "/comments";
+        LOGGER.info("getCommentsAsync URL::{}", url);
+        List<Comments> commentsList = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Comments>>() {
+                }
+        ).getBody();
+        List<Comments> limitedList= CommonUtils.getLimitedList(commentsList,10);
+        return CompletableFuture.completedFuture(limitedList);
+    }
+
+    @Override
+    public CompletableFuture<List<Todos>> getTodosAsync() {
+        String url = jsonPlaceHolder + "/todos";
+        LOGGER.info("getTodosAsync URL::{}", url);
+        List<Todos> todosList = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Todos>>() {
+                }
+        ).getBody();
+        List<Todos> limitedList= CommonUtils.getLimitedList(todosList,10);
+        return CompletableFuture.completedFuture(limitedList);
+    }
+
     @Override
     public List<Product> fetchProducts() {
         String url = products + "/products";
+        LOGGER.info("fetchProducts URL::{}", url);
         List<Product> productList = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -44,12 +182,14 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Override
     public CartResponse fetchCarts() {
         String url = carts + "/carts";
+        LOGGER.info("fetchCarts URL::{}", url);
         return restTemplate.getForObject(url, CartResponse.class);
     }
 
     @Override
     public List<Book> fetchBooks() {
         String url = fakeRestApi + "/api/v1/Books";
+        LOGGER.info("fetchBooks URL::{}", url);
         List<Book> bookList=  restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -69,6 +209,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
             System.out.println("Thread was interrupted!");
         }
         String url = fakeRestApi + "/api/v1/Authors";
+        LOGGER.info("fetchAuthors URL::{}", url);
         List<Authors> authorsList = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -83,6 +224,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Override
     public List<Posts> fetchPosts() {
         String url = jsonPlaceHolder + "/posts";
+        LOGGER.info("fetchPosts URL::{}", url);
         /*try {
             TimeUnit.MINUTES.sleep(2); // Sleeps for 2 seconds
         } catch (InterruptedException e) {
@@ -102,6 +244,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Override
     public List<Comments> fetchComments() {
         String url = jsonPlaceHolder + "/comments";
+        LOGGER.info("fetchComments URL::{}", url);
         List<Comments> commentsList = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -115,6 +258,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Override
     public List<Todos> fetchTodos() {
         String url = jsonPlaceHolder + "/todos";
+        LOGGER.info("fetchTodos URL::{}", url);
         List<Todos> todosList = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -128,6 +272,7 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
     @Override
     public List<Photos> fetchPhotos() {
         String url = jsonPlaceHolder + "/photos";
+        LOGGER.info("fetchPhotos URL::{}", url);
         List<Photos> photosList = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
@@ -137,4 +282,6 @@ public class FakeRestTemplateServiceImpl implements FakeRestTemplateService {
         ).getBody();
         return CommonUtils.getLimitedList(photosList,10);
     }
+
+
 }

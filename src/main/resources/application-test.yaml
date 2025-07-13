@@ -70,11 +70,11 @@ logging:
 
 fake:
   rest:
-    jsonPlaceHolder: http://localhost:8082/fake
-    users: http://localhost:8082/fake
-    products: http://localhost:8082/fake
-    carts: http://localhost:8082/fake
-    fakeRestApi: http://localhost:8082/fake
+    jsonPlaceHolder: https://jsonplaceholder.typicode.com
+    users: https://dummyjson.com
+    products: https://fakestoreapi.com
+    carts: https://dummyjson.com
+    fakeRestApi: https://fakerestapi.azurewebsites.net
 
 
   #"https://fakestoreapi.com/products",

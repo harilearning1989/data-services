@@ -2,7 +2,6 @@ package com.web.demo.controls;
 
 import com.web.demo.records.*;
 import com.web.demo.services.FakeRestClientService;
-import com.web.demo.services.FakeRestTemplateService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
