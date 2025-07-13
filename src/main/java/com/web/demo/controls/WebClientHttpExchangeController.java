@@ -1,9 +1,6 @@
 package com.web.demo.controls;
 
-import com.web.demo.records.Comments;
-import com.web.demo.records.Posts;
-import com.web.demo.records.Todos;
-import com.web.demo.records.Users;
+import com.web.demo.records.*;
 import com.web.demo.services.client.CommentsRestClient;
 import com.web.demo.services.client.JsonPlaceHolderClient;
 import com.web.demo.services.client.TodosRestClient;
@@ -39,17 +36,17 @@ public class WebClientHttpExchangeController {
     }
 
     @GetMapping(value = "/comments")
-    public List<Comments> getComments() {
+    public Comment getComments() {
         return commentsRestClient.getAllComments();
     }
 
     @GetMapping(value = "/users")
-    public List<Users> getUsers() {
+    public User getUsers() {
         return usersRestClient.getAllUsers();
     }
 
     @GetMapping(value = "/todos")
-    public List<Todos> getTodos() {
+    public Todo getTodos() {
         return todosRestClient.getAllTodos();
     }
 
