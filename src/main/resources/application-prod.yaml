@@ -1,0 +1,71 @@
+server:
+  port: ${SERVER_PORT:8081} # Default to 8081 if not set
+
+spring:
+  datasource:
+    hospital:
+      jdbcUrl: jdbc:oracle:thin:@//${DB_HOST:localhost}:${DB_PORT:1521}/${DB_SERVICE:ORCLPDB1}
+      driver-class-name: oracle.jdbc.OracleDriver
+      username: ${DB_USERNAME:EMPLOYEE}
+      password: ${DB_PASSWORD:dudkrish1A@}
+      hikari:
+        pool-name: HikariHospital
+        maximum-pool-size: ${DB_MAX_POOL_SIZE:10}
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.OracleDialect
+
+    order:
+      jdbcUrl: jdbc:oracle:thin:@//${DB_HOST:localhost}:${DB_PORT:1521}/${DB_SERVICE:ORCLPDB1}
+      driver-class-name: oracle.jdbc.OracleDriver
+      username: ${DB_USERNAME:EMPLOYEE}
+      password: ${DB_PASSWORD:dudkrish1A@}
+      hikari:
+        pool-name: HikariOrder
+        maximum-pool-size: ${DB_MAX_POOL_SIZE:10}
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.OracleDialect
+
+    emp:
+      jdbcUrl: jdbc:oracle:thin:@//${DB_HOST:localhost}:${DB_PORT:1521}/${DB_SERVICE:ORCLPDB1}
+      driver-class-name: oracle.jdbc.OracleDriver
+      username: ${DB_USERNAME:EMPLOYEE}
+      password: ${DB_PASSWORD:dudkrish1A@}
+      hikari:
+        pool-name: HikariEmp
+        maximum-pool-size: ${DB_MAX_POOL_SIZE:10}
+        properties:
+          hibernate:
+            dialect: org.hibernate.dialect.OracleDialect
+
+  jpa:
+    show-sql: true
+    format-sql: true
+    properties:
+      hibernate:
+        enable_lazy_load_no_trans: true
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+
+  sql:
+    init:
+      continue-on-error: true
+
+  cache:
+    type: redis
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+fake:
+  rest:
+    jsonPlaceHolder: ${FAKE_API_JSONPLACEHOLDER:https://jsonplaceholder.typicode.com}
+    users: ${FAKE_API_USERS:https://dummyjson.com}
+    products: ${FAKE_API_PRODUCTS:https://fakestoreapi.com}
+    carts: ${FAKE_API_CARTS:https://dummyjson.com}
+    fakeRestApi: ${FAKE_API_REST:https://fakerestapi.azurewebsites.net}

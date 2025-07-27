@@ -23,6 +23,20 @@ public class ThreadAsyncConfig {
         return executor;
     }*/
 
+    @Bean(name = "webClientExecutor")
+    public ThreadPoolTaskExecutor webClientExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("WebClientExecutor-");
+        /*executor.setRejectedExecutionHandler((r, exec) -> {
+            LOGGER.info("ThreadAsyncConfig restExecutor Task rejected: {}", r.toString());
+        });*/
+        executor.initialize();
+        return executor;
+    }
+
     @Bean(name = "restExecutor")
     public ThreadPoolTaskExecutor restExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();

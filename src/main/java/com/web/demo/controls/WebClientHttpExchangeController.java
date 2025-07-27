@@ -1,53 +1,55 @@
 package com.web.demo.controls;
 
 import com.web.demo.records.*;
-import com.web.demo.services.client.CommentsRestClient;
-import com.web.demo.services.client.JsonPlaceHolderClient;
-import com.web.demo.services.client.TodosRestClient;
-import com.web.demo.services.client.UsersRestClient;
+import com.web.demo.services.WebClientHttpExchangeService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/exchange")
 public class WebClientHttpExchangeController {
 
-    private final UsersRestClient usersRestClient;
-    private final CommentsRestClient commentsRestClient;
-    private final JsonPlaceHolderClient jsonPlaceHolderClient;
-    private final TodosRestClient todosRestClient;
+    private final WebClientHttpExchangeService webClientHttpExchangeService;
 
-    public WebClientHttpExchangeController(UsersRestClient usersRestClient,
-                                           CommentsRestClient commentsRestClient,
-                                           JsonPlaceHolderClient jsonPlaceHolderClient,
-                                           TodosRestClient todosRestClient) {
-        this.usersRestClient = usersRestClient;
-        this.commentsRestClient = commentsRestClient;
-        this.jsonPlaceHolderClient = jsonPlaceHolderClient;
-        this.todosRestClient = todosRestClient;
+    public WebClientHttpExchangeController(WebClientHttpExchangeService webClientHttpExchangeService) {
+        this.webClientHttpExchangeService = webClientHttpExchangeService;
+    }
+
+    @GetMapping(value = "/postsAsync")
+    public List<Posts> getPhotosAsync() {
+        CompletableFuture<List<Posts>> futureProducts = webClientHttpExchangeService.getAllPostsAsync();
+        List<Posts> photosList = null;
+        try {
+            photosList = futureProducts.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        return photosList;
     }
 
     @GetMapping(value = "/posts")
     public List<Posts> streamAllPosts() {
-        return jsonPlaceHolderClient.getAllPosts();
+        return webClientHttpExchangeService.getAllPosts();
     }
 
     @GetMapping(value = "/comments")
     public Comment getComments() {
-        return commentsRestClient.getAllComments();
+        return webClientHttpExchangeService.getAllComments();
     }
 
     @GetMapping(value = "/users")
     public User getUsers() {
-        return usersRestClient.getAllUsers();
+        return webClientHttpExchangeService.getAllUsers();
     }
 
     @GetMapping(value = "/todos")
     public Todo getTodos() {
-        return todosRestClient.getAllTodos();
+        return webClientHttpExchangeService.getAllTodos();
     }
 
 

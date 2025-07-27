@@ -30,5 +30,39 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(problem);
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleProblemDetailException(ResourceNotFoundException ex,HttpServletRequest request) {
+        ProblemDetail problem = ProblemDetail.forStatus(ex.getStatus());
+        problem.setTitle("Execution Rejected");
+        problem.setDetail(ex.getMessage());
+        problem.setType(URI.create(ex.getUrl()));
+        problem.setInstance(URI.create(request.getRequestURI()));
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity
+                .status(ex.getStatus())
+                .body(problem);
+    }
+
+    @ExceptionHandler(TimeoutException.class)
+    public ProblemDetail handleTimeout(TimeoutException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.GATEWAY_TIMEOUT);
+        problem.setTitle("Timeout");
+        problem.setDetail(ex.getMessage());
+        problem.setProperty("url", ex.getUrl());
+        problem.setProperty("status", ex.getStatus());
+        return problem;
+    }
+
+    @ExceptionHandler(RemoteServiceException.class)
+    public ProblemDetail remoteServiceException(RemoteServiceException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.GATEWAY_TIMEOUT);
+        problem.setTitle("Timeout");
+        problem.setDetail(ex.getMessage());
+        problem.setProperty("url", ex.getUrl());
+        problem.setProperty("status", ex.getStatus());
+        return problem;
+    }
 }
 

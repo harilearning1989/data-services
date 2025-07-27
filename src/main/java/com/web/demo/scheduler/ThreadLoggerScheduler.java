@@ -12,17 +12,17 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 
 @Component
-public class ThreadLogger {
+public class ThreadLoggerScheduler {
 
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private final ThreadPoolTaskExecutor restExecutor;
 
-    public ThreadLogger(@Qualifier("restExecutor") ThreadPoolTaskExecutor restExecutor) {
+    public ThreadLoggerScheduler(@Qualifier("restExecutor") ThreadPoolTaskExecutor restExecutor) {
         this.restExecutor = restExecutor;
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 500000)
     public void logThreadPoolStats() {
         LOGGER.info("Thread Pool Stats:");
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();

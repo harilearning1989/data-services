@@ -1,21 +1,33 @@
 package com.web.demo.config.wc;
 
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.web.demo.exceptions.RemoteServiceException;
+import com.web.demo.exceptions.ResourceNotFoundException;
+import com.web.demo.exceptions.TimeoutException;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutException;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientRequest;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
-import java.time.LocalDateTime;
-import java.util.*;
+import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static reactor.core.Exceptions.unwrap;
 
 @Service
 public class CommonWebClient {
@@ -38,15 +50,185 @@ public class CommonWebClient {
                 .createClient(serviceType);
     }
 
-    private WebClient createWebClient(String url, Map<String, String> headers) {
+    /*private WebClient createWebClient(String url, Map<String, String> headers) {
         return WebClient.builder()
                 .baseUrl(url)
-                /*.filters(exchangeFilterFunctions -> {
+                *//*.filters(exchangeFilterFunctions -> {
                     exchangeFilterFunctions.add(new AuditClientFilter());
-                })*/
+                })*//*
                 .defaultHeaders(header -> headers.forEach(header::add))
+                .filter(errorHandlingFilter())
+                .build();
+    }*/
+
+    private WebClient createWebClient(String url, Map<String, String> headers) {
+        // Step 1: Create connection pool
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("custom-conn-pool")
+                .maxConnections(50)
+                .pendingAcquireTimeout(Duration.ofSeconds(10))
+                .maxIdleTime(Duration.ofSeconds(60))
+                .build();
+
+        // Step 2: Create HttpClient directly using connection provider
+        HttpClient httpClient = HttpClient.create(connectionProvider)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.SECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(5, TimeUnit.SECONDS))
+                );
+
+        // Step 3: Use this in WebClient
+        return WebClient.builder()
+                .baseUrl(url)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .defaultHeaders(http -> headers.forEach(http::add))
+                .filter(errorHandlingFilter())
                 .build();
     }
+
+    /*private ExchangeFilterFunction errorHandlingFilter() {
+        return (request, next) -> {
+            System.out.println("Request Thread: " + Thread.currentThread().getName());
+            String url = request.url().toString(); // Capture the URL here
+
+            return next.exchange(request).flatMap(response -> {
+                HttpStatusCode status = response.statusCode();
+                System.out.println("Response Thread: " + Thread.currentThread().getName());
+
+                if (status.is4xxClientError()) {
+                    if (status == HttpStatus.NOT_FOUND) {
+                        return response.bodyToMono(String.class)
+                                .defaultIfEmpty("Resource not found")
+                                .flatMap(body -> Mono.error(new ResourceNotFoundException(url, status, body)));
+                    }
+                    return response.bodyToMono(String.class)
+                            .flatMap(body -> Mono.error(new RuntimeException("Client error: " + body)));
+                } else if (status.is5xxServerError()) {
+                    return response.bodyToMono(String.class)
+                            .flatMap(body -> Mono.error(new RuntimeException("Server error: " + body)));
+                }
+
+                return Mono.just(response);
+            });
+        };
+    }*/
+
+    private ExchangeFilterFunction errorHandlingFilter() {
+        return ExchangeFilterFunction.ofRequestProcessor(request -> {
+            return Mono.just(ClientRequest.from(request)
+                    .attribute("requestUrl", request.url().toString())
+                    .build());
+        }).andThen((request, next) ->
+                next.exchange(request)
+                        .flatMap(response -> {
+                            String requestUrl = request.attribute("requestUrl")
+                                    .map(Object::toString)
+                                    .orElse("unknown");
+
+                            if (response.statusCode().is4xxClientError()) {
+                                if (response.statusCode() == HttpStatus.NOT_FOUND) {
+                                    return response.bodyToMono(String.class)
+                                            .defaultIfEmpty("Resource not found")
+                                            .flatMap(body -> Mono.error(new ResourceNotFoundException(
+                                                    requestUrl,
+                                                    HttpStatus.NOT_FOUND,
+                                                    "404 NOT FOUND: " + body
+                                            )));
+                                }
+                                return response.bodyToMono(String.class)
+                                        .flatMap(body -> Mono.error(new RemoteServiceException(
+                                                requestUrl,
+                                                response.statusCode(),
+                                                body
+                                        )));
+                            } else if (response.statusCode().is5xxServerError()) {
+                                return response.bodyToMono(String.class)
+                                        .flatMap(body -> Mono.error(new RemoteServiceException(
+                                                requestUrl,
+                                                response.statusCode(),
+                                                extractErrorJson(body)
+                                        )));
+                            }
+                            return Mono.just(response);
+                        })
+                        .onErrorResume(throwable -> {
+                            String requestUrl = request.attribute("requestUrl")
+                                    .map(Object::toString)
+                                    .orElse("unknown");
+
+                            Throwable cause = unwrap(throwable);
+                            // Check if the exception is or wraps ReadTimeoutException
+                           /* Throwable cause = throwable instanceof WebClientRequestException
+                                    ? throwable.getCause()
+                                    : throwable;*/
+
+                            if (cause instanceof ReadTimeoutException) {
+                                return Mono.error(new TimeoutException(
+                                        requestUrl,
+                                        HttpStatus.GATEWAY_TIMEOUT,
+                                        "Read timed out while calling: " + requestUrl
+                                ));
+                            }
+
+                            // Check if error message has embedded JSON and format it
+                           /* String message = cause.getMessage();
+                            if (message != null && message.contains("{") && message.contains("error")) {
+                                try {
+                                    String jsonPart = message.substring(message.indexOf("{"));
+                                    String formatted = extractErrorJson(jsonPart);
+                                    return Mono.error(new RuntimeException("Parsed error: " + formatted));
+                                } catch (Exception ex) {
+                                    // Fallback if parsing fails
+                                    return Mono.error(new RuntimeException("Unhandled error: " + message));
+                                }
+                            }*/
+
+                            String message = cause.getMessage();
+                            if (message != null && message.contains("{") && message.contains("error")) {
+                                try {
+                                    String jsonPart = message.substring(message.indexOf("{"));
+                                    String formatted = extractErrorJson(jsonPart);
+                                    return Mono.error(new RemoteServiceException(
+                                            requestUrl,
+                                            HttpStatus.INTERNAL_SERVER_ERROR,
+                                            formatted
+                                    ));
+                                } catch (Exception ex) {
+                                    return Mono.error(new RemoteServiceException(
+                                            requestUrl,
+                                            HttpStatus.INTERNAL_SERVER_ERROR,
+                                            message
+                                    ));
+                                }
+                            }
+
+                            return Mono.error(new RemoteServiceException(
+                                    requestUrl,
+                                    HttpStatus.INTERNAL_SERVER_ERROR,
+                                    "Internal Server Error"
+                            ));
+                            //return Mono.error(throwable);
+                        })
+        );
+    }
+
+    private String extractErrorJson(String rawJson) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> json = mapper.readValue(rawJson, Map.class);
+
+            return String.format(
+                    "timestamp: %s, status: %s, error: %s, path: %s",
+                    json.getOrDefault("timestamp", ""),
+                    json.getOrDefault("status", ""),
+                    json.getOrDefault("error", ""),
+                    json.getOrDefault("path", "")
+            );
+        } catch (Exception e) {
+            return rawJson; // fallback if not parseable
+        }
+    }
+
 
     /*
 
