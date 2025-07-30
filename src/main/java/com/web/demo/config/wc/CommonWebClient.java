@@ -170,19 +170,6 @@ public class CommonWebClient {
                                 ));
                             }
 
-                            // Check if error message has embedded JSON and format it
-                           /* String message = cause.getMessage();
-                            if (message != null && message.contains("{") && message.contains("error")) {
-                                try {
-                                    String jsonPart = message.substring(message.indexOf("{"));
-                                    String formatted = extractErrorJson(jsonPart);
-                                    return Mono.error(new RuntimeException("Parsed error: " + formatted));
-                                } catch (Exception ex) {
-                                    // Fallback if parsing fails
-                                    return Mono.error(new RuntimeException("Unhandled error: " + message));
-                                }
-                            }*/
-
                             String message = cause.getMessage();
                             if (message != null && message.contains("{") && message.contains("error")) {
                                 try {
@@ -207,7 +194,6 @@ public class CommonWebClient {
                                     HttpStatus.INTERNAL_SERVER_ERROR,
                                     "Internal Server Error"
                             ));
-                            //return Mono.error(throwable);
                         })
         );
     }
@@ -402,11 +388,11 @@ public class CommonWebClient {
         return Mono.error(e);
     }*/
 
-    private Long retrieveAuditIdTmp() {
+   /* private Long retrieveAuditIdTmp() {
         return (Long) Mono.deferContextual((ctx) -> Mono.justOrEmpty((Optional) ctx.get("auditId"))).block();
     }
 
     private String getBody(ClientRequest request) {
         return null;
-    }
+    }*/
 }
