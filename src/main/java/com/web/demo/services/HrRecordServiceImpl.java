@@ -1,6 +1,8 @@
 package com.web.demo.services;
 
+import com.web.demo.dtos.DepartmentsDto;
 import com.web.demo.dtos.HrRecordDto;
+import com.web.demo.dtos.HrRecordMinimalDto;
 import com.web.demo.models.emp.HrRecords;
 import com.web.demo.projection.HrDetails;
 import com.web.demo.records.HrDetailsRecord;
@@ -8,6 +10,8 @@ import com.web.demo.repos.emp.HrRecordRepository;
 import jakarta.persistence.QueryHint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +50,39 @@ public class HrRecordServiceImpl implements HrRecordService {
             return List.of();
         }
         return toDtoList(hrRecordsList);
+    }
+
+    @Override
+    public List<HrRecordDto> findTop10WithDepartments() {
+        Pageable pageable = PageRequest.of(0, 10);
+        List<HrRecords> hrRecordsList = hrRecordRepository.findTop10WithDepartments(pageable);
+        if (hrRecordsList.isEmpty()) {
+            LOGGER.warn("findTop10WithDepartments() No HR records found in the database");
+            return List.of();
+        }
+        return toDtoList(hrRecordsList);
+    }
+
+    @Override
+    public List<HrRecordDto> findTop1000WithDepartments() {
+        Pageable pageable = PageRequest.of(0, 1000);
+        List<HrRecords> hrRecordsList = hrRecordRepository.findTop1000WithDepartments(pageable);
+        if (hrRecordsList.isEmpty()) {
+            LOGGER.warn("findTop1000WithDepartments() No HR records found in the database");
+            return List.of();
+        }
+        return toDtoList(hrRecordsList);
+    }
+
+    @Override
+    public List<HrRecordMinimalDto> findTop1000WithMinimal() {
+        Pageable pageable = PageRequest.of(0, 2000);
+        List<HrRecordMinimalDto> hrRecordsList = hrRecordRepository.findTop1000WithMinimal(pageable);
+        if (hrRecordsList.isEmpty()) {
+            LOGGER.warn("findTop1000WithMinimal() No HR records found in the database");
+            return List.of();
+        }
+        return hrRecordsList;
     }
 
     @Override
@@ -150,7 +187,9 @@ public class HrRecordServiceImpl implements HrRecordService {
                 entity.getZip(),
                 entity.getRegion(),
                 entity.getUserName(),
-                entity.getPassword()
+                entity.getPassword(),
+                entity.getDepartment().getDepartmentId(),
+                entity.getDepartment().getDepartmentName()
         );
     }
 

@@ -40,7 +40,9 @@ public record HrRecordDto(
         String zip,
         String region,
         String userName,
-        String password
+        String password,
+        int departmentId,
+        String departmentName
 ) implements Serializable {
 }
 

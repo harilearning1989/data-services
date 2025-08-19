@@ -130,5 +130,11 @@ public class HrRecords {
     @Column(name = "PASSWORD", length = 20)
     private String password;
 
+    //@ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "DEPARTMENT_ID", referencedColumnName = "DEPARTMENT_ID",
+            foreignKey = @ForeignKey(name = "FK_DEPARTMENT_ID"))
+    private Departments department;
+
 }
 

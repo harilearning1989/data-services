@@ -1,16 +1,27 @@
 server:
-  port: 8081
+  port: 8083
   #tomcat:
    # threads:
     #  max: 200
      # max-queue-capacity: 100
       #min-spare: 10
 spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      group-id: employee_group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   #autoconfigure:
   #  exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
   datasource:
     hospital:
-      jdbcUrl: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
+      jdbcUrl: jdbc:oracle:thin:@//${ORACLE_HOST:localhost}:1521/ORCLPDB1
       driver-class-name: oracle.jdbc.OracleDriver
       username: EMPLOYEE
       password: dudkrish1A@
@@ -21,7 +32,7 @@ spring:
           hibernate:
             dialect: org.hibernate.dialect.OracleDialect
     order:
-      jdbcUrl: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
+      jdbcUrl: jdbc:oracle:thin:@//${ORACLE_HOST:localhost}:1521/ORCLPDB1
       driver-class-name: oracle.jdbc.OracleDriver
       username: EMPLOYEE
       password: dudkrish1A@
@@ -32,7 +43,7 @@ spring:
           hibernate:
             dialect: org.hibernate.dialect.OracleDialect
     emp:
-      jdbcUrl: jdbc:oracle:thin:@//localhost:1521/ORCLPDB1
+      jdbcUrl: jdbc:oracle:thin:@//${ORACLE_HOST:localhost}:1521/ORCLPDB1
       driver-class-name: oracle.jdbc.OracleDriver
       username: EMPLOYEE
       password: dudkrish1A@
@@ -70,11 +81,11 @@ logging:
 
 fake:
   rest:
-    jsonPlaceHolder: http://localhost:8082/fake
+    jsonPlaceHolder: ${FAKE_REST_SERVICE:http://localhost:8082/fake}
     users: http://localhost:8082/fake
-    products: http://localhost:8082/fake
-    carts: http://localhost:8082/fake
-    fakeRestApi: http://localhost:8082/fake
+    products: ${FAKE_REST_SERVICE:http://localhost:8082/fake}
+    carts: ${FAKE_REST_SERVICE:http://localhost:8082/fake}
+    fakeRestApi: ${FAKE_REST_SERVICE:http://localhost:8082/fake}
 
 
   #"https://fakestoreapi.com/products",
@@ -85,3 +96,5 @@ fake:
   #"https://jsonplaceholder.typicode.com/comments",
   #"https://jsonplaceholder.typicode.com/todos",
   #"https://jsonplaceholder.typicode.com/photos"
+
+

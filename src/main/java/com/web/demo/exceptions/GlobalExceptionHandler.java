@@ -1,11 +1,13 @@
 package com.web.demo.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.time.Instant;
@@ -13,6 +15,35 @@ import java.util.concurrent.RejectedExecutionException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(404);
+        problemDetail.setTitle("Static Resource Not Found");
+        problemDetail.setDetail("The requested static resource was not found: " + ex.getResourcePath());
+        problemDetail.setType(URI.create("https://example.com/errors/not-found"));
+        problemDetail.setProperty("resource", ex.getResourcePath());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
+    public ProblemDetail handleInvalidDataAccess(InvalidDataAccessResourceUsageException ex, HttpServletRequest request) {
+        ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problemDetail.setTitle("Database Query Error");
+        problemDetail.setDetail("The database query was invalid or referenced a non-existent resource.");
+
+        // Dynamic error type URI
+        String errorCode = "invalid-query";
+        String path = request.getRequestURI();
+        String dynamicType = "https://example.com/errors/" + errorCode + "?path=" + path;
+
+        problemDetail.setType(URI.create(dynamicType));
+        problemDetail.setProperty("exception", ex.getClass().getSimpleName());
+        problemDetail.setProperty("path", path);
+        problemDetail.setProperty("message", ex.getMessage());
+
+        return problemDetail;
+    }
 
     @ExceptionHandler(RejectedExecutionException.class)
     public ResponseEntity<ProblemDetail> handleRejectedExecutionException(

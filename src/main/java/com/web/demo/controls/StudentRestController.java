@@ -1,13 +1,13 @@
 package com.web.demo.controls;
 
 import com.web.demo.records.StudentRecord;
+import com.web.demo.services.StudentProducerImppl;
 import com.web.demo.services.StudentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,6 +19,11 @@ public class StudentRestController {
     private static final Logger LOGGER = LoggerFactory.getLogger(StudentRestController.class);
 
     private StudentService studentService;
+    private final StudentProducerImppl producer;
+
+    public StudentRestController(StudentProducerImppl producer) {
+        this.producer = producer;
+    }
 
     @Autowired
     public StudentRestController setStudentService(StudentService studentService) {
@@ -49,5 +54,11 @@ public class StudentRestController {
             throw new RuntimeException(e);
         }
         return "Read Success";
+    }
+
+    @PostMapping("student")
+    public ResponseEntity<String> sendStudent(@RequestBody com.web.demo.dtos.StudentRecord student) {
+        producer.sendStudent(student);
+        return ResponseEntity.ok("Student message sent to Kafka");
     }
 }

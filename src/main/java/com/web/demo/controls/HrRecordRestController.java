@@ -1,6 +1,7 @@
 package com.web.demo.controls;
 
 import com.web.demo.dtos.HrRecordDto;
+import com.web.demo.dtos.HrRecordMinimalDto;
 import com.web.demo.projection.HrDetails;
 import com.web.demo.records.HrDetailsRecord;
 import com.web.demo.services.HrRecordService;
@@ -33,14 +34,15 @@ public class HrRecordRestController {
     }
 
     @Operation(
-            summary = "Get top 10 HR records",
+            summary = "Get top 10 HR records N+1 Problem",
             description = "Returns the top 10 HR records from the database. Optionally filters by department if the 'department' query parameter is provided."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of top 10 HR records"),
             @ApiResponse(responseCode = "204", description = "No HR records found")
     })
-    @GetMapping("top10")
+    @GetMapping("top10NP1")
+    //this leads N+1 problem
     public ResponseEntity<List<HrRecordDto>> findTop10By(@RequestParam(value = "department", required = false) String department) {
         List<HrRecordDto> hrRecordDtoList = hrRecordService.findTop10By();
         if (hrRecordDtoList.isEmpty()) {
@@ -48,6 +50,66 @@ public class HrRecordRestController {
             return ResponseEntity.noContent().build();
         }
         LOGGER.info("findTop10By() Returning {} HR records", hrRecordDtoList.size());
+        return ResponseEntity.ok(hrRecordDtoList);
+    }
+
+    @Operation(
+            summary = "Get top 10 HR records solves N+1",
+            description = "Returns the top 10 HR records from the database. Optionally filters by department if the 'department' query parameter is provided."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of top 10 HR records"),
+            @ApiResponse(responseCode = "204", description = "No HR records found")
+    })
+    @GetMapping("top1000")
+    //this will solve N+1 problem
+    public ResponseEntity<List<HrRecordMinimalDto>> findTop1000WithMinimal() {
+        List<HrRecordMinimalDto> hrRecordDtoList = hrRecordService.findTop1000WithMinimal();
+        if (hrRecordDtoList.isEmpty()) {
+            LOGGER.warn("findTop1000WithMinimal() No HR records found");
+            return ResponseEntity.noContent().build();
+        }
+        LOGGER.info("findTop1000WithMinimal() Returning {} HR records", hrRecordDtoList.size());
+        return ResponseEntity.ok(hrRecordDtoList);
+    }
+
+    @Operation(
+            summary = "Get top 10 HR records solves N+1",
+            description = "Returns the top 10 HR records from the database. Optionally filters by department if the 'department' query parameter is provided."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of top 10 HR records"),
+            @ApiResponse(responseCode = "204", description = "No HR records found")
+    })
+    @GetMapping("top10")
+    //this will solve N+1 problem
+    public ResponseEntity<List<HrRecordDto>> findTop10WithDepartments() {
+        List<HrRecordDto> hrRecordDtoList = hrRecordService.findTop10WithDepartments();
+        if (hrRecordDtoList.isEmpty()) {
+            LOGGER.warn("findTop10WithDepartments() No HR records found");
+            return ResponseEntity.noContent().build();
+        }
+        LOGGER.info("findTop10WithDepartments() Returning {} HR records", hrRecordDtoList.size());
+        return ResponseEntity.ok(hrRecordDtoList);
+    }
+
+    @Operation(
+            summary = "Get top 10 HR records solves N+1",
+            description = "Returns the top 10 HR records from the database. Optionally filters by department if the 'department' query parameter is provided."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of top 10 HR records"),
+            @ApiResponse(responseCode = "204", description = "No HR records found")
+    })
+    @GetMapping("top1000AllColumns")
+    //this will solve N+1 problem
+    public ResponseEntity<List<HrRecordDto>> findTop1000WithDepartments() {
+        List<HrRecordDto> hrRecordDtoList = hrRecordService.findTop1000WithDepartments();
+        if (hrRecordDtoList.isEmpty()) {
+            LOGGER.warn("findTop1000WithDepartments() No HR records found");
+            return ResponseEntity.noContent().build();
+        }
+        LOGGER.info("findTop1000WithDepartments() Returning {} HR records", hrRecordDtoList.size());
         return ResponseEntity.ok(hrRecordDtoList);
     }
 
